@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="4dp"
+        android:background="@android:drawable/divider_horizontal_bright"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/newsSectionTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="179dp"
+            android:layout_marginTop="80dp"
+            android:text="TextView" />
+
+        <View
+            android:id="@+id/homeDivider"
+            android:layout_width="2dp"
+            android:layout_height="14dp"
+            android:layout_marginLeft="172dp"
+            android:layout_marginTop="82dp"
+            android:background="@color/colorPrimary" />
+
+        <ImageView
+            android:id="@+id/bookmarkImageView"
+            android:layout_width="25dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="370dp"
+            android:layout_marginTop="5dp"
+            app:srcCompat="@drawable/ic_bookmark_border_black_24dp" />
+
+        <TextView
+            android:id="@+id/newsTitleTextView"
+            android:layout_width="240dp"
+            android:layout_height="66dp"
+            android:layout_marginLeft="115dp"
+            android:layout_marginTop="5dp"
+            android:text="TextView"
+            android:textColor="@android:color/black"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/newImageView"
+            android:layout_width="105dp"
+            android:layout_height="115dp"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/icon_news" />
+
+        <TextView
+            android:id="@+id/newsTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="115dp"
+            android:layout_marginTop="80dp"
+            android:text="TextView" />
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
