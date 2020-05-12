@@ -41,8 +41,8 @@
     <ImageView
         android:id="@+id/dialogImageView"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:scaleType="fitXY"
+        android:layout_height="165dp"
+        android:scaleType="centerCrop"
         app:srcCompat="@android:drawable/sym_def_app_icon" />
 
     <TextView

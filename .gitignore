@@ -12,3 +12,6 @@
 /captures
 .externalNativeBuild
 .cxx
+app\src\androidTest
+app\src\test
+app\src\main\java\lasdot\com\ApiKeys.java

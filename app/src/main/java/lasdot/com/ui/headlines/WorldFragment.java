@@ -1,25 +1,21 @@
 package lasdot.com.ui.headlines;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -43,25 +39,47 @@ import lasdot.com.R;
 import lasdot.com.TruncateString;
 
 public class WorldFragment extends Fragment {
-    private static int WORD_LENGTH = 13;
+    private int WORD_LENGTH = 13;
 
-    protected RecyclerView worldListView;
+    private RecyclerView worldListView;
 
-    HeadlineListObject worldListObject;
+    private SectionListObject worldListObject;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private ProgressBar progressBar;
+
+    private TextView fetchingNews;
 
     public WorldFragment() {
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_world, container, false);
+        final View view = inflater.inflate(R.layout.fragment_world, container, false);
 
         worldListView = view.findViewById(R.id.worldListView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         worldListView.setLayoutManager(linearLayoutManager);
 
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshWorldFrag);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                fetchWorldNews(view);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        progressBar = view.findViewById(R.id.worldProgressBar);
+        fetchingNews = view.findViewById(R.id.worldFetchingTextView);
+
+        fetchWorldNews(view);
+        return view;
+    }
+
+    private void fetchWorldNews(View view) {
         JsonObjectRequest jsonRequest = new JsonObjectRequest
                 (Request.Method.GET, "http://35.188.11.46:3000/results/world?source=guardian", null, new Response.Listener<JSONObject>() {
                     @Override
@@ -70,12 +88,16 @@ public class WorldFragment extends Fragment {
                         try {
                             response = response.getJSONObject("response");
                             JSONArray resultItems = response.getJSONArray("results");
-                            worldListObject = new HeadlineListObject();
+                            worldListObject = new SectionListObject();
                             for (int i = 0; i < resultItems.length(); i++) {
                                 JSONObject resultItem = (JSONObject) resultItems.get(i);
+
+                                //Add truncated title and long title
                                 worldListObject.newsTitleLong.add(resultItem.getString("webTitle"));
                                 TruncateString truncateString = new TruncateString(resultItem.getString("webTitle"), WORD_LENGTH);
                                 worldListObject.newsTitle.add(truncateString.getTruncation());
+
+                                worldListObject.webURL.add(resultItem.getString("webUrl"));
 
                                 //Add Time
                                 DateToZoneTimeString dateToZoneTimeString = new DateToZoneTimeString(resultItem.getString("webPublicationDate"));
@@ -93,7 +115,11 @@ public class WorldFragment extends Fragment {
                                 //Get articleId
                                 worldListObject.articleId.add(resultItem.getString("id"));
                             }
-                            HeadlineCustomAdapter headlineCustomAdapter = new HeadlineCustomAdapter(getContext(), worldListObject);
+                            if (worldListObject.newsTitle.size() != 0) {
+                                progressBar.setVisibility(View.GONE);
+                                fetchingNews.setVisibility(View.GONE);
+                            }
+                            SectionCustomAdapter headlineCustomAdapter = new SectionCustomAdapter(getContext(), worldListObject);
                             worldListView.setAdapter(headlineCustomAdapter);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -112,11 +138,9 @@ public class WorldFragment extends Fragment {
                 });
         RequestQueue requestQueue = Volley.newRequestQueue(view.getContext());
         requestQueue.add(jsonRequest);
-        return view;
     }
 
     private String fetchImageURL(JSONObject resultItem) {
-        Log.i("RESULT ITEM", resultItem.toString());
         try {
             JSONArray elements = resultItem.getJSONObject("blocks")
                     .getJSONObject("main")
@@ -150,8 +174,7 @@ public class WorldFragment extends Fragment {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 InputStream in = conn.getInputStream();
-                Bitmap myBitmap = BitmapFactory.decodeStream(in);
-                return myBitmap;
+                return BitmapFactory.decodeStream(in);
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;

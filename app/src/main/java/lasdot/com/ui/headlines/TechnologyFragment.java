@@ -1,22 +1,20 @@
 package lasdot.com.ui.headlines;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -29,10 +27,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.ExecutionException;
 
 import lasdot.com.DateToZoneTimeString;
 import lasdot.com.TruncateString;
@@ -41,11 +39,17 @@ import lasdot.com.R;
 
 public class TechnologyFragment extends Fragment {
 
-    private static int WORD_LENGTH = 13;
+    private int WORD_LENGTH = 13;
 
-    protected RecyclerView technologyListView;
+    private RecyclerView technologyListView;
 
-    HeadlineListObject technologyListObject;
+    private SectionListObject technologyListObject;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private ProgressBar progressBar;
+
+    private TextView fetchingNews;
 
     public TechnologyFragment() {
     }
@@ -54,11 +58,28 @@ public class TechnologyFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_technology, container, false);
+        final View view = inflater.inflate(R.layout.fragment_technology, container, false);
         technologyListView = view.findViewById(R.id.technologyListView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         technologyListView.setLayoutManager(linearLayoutManager);
 
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshTechnologyFrag);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                fetchTechnologyNews(view);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        progressBar = view.findViewById(R.id.technologyProgressBar);
+        fetchingNews = view.findViewById(R.id.technologyFetchingTextView);
+
+        fetchTechnologyNews(view);
+        return view;
+    }
+
+    private void fetchTechnologyNews(View view) {
         JsonObjectRequest jsonRequest = new JsonObjectRequest
                 (Request.Method.GET, "http://35.188.11.46:3000/results/technology?source=guardian", null, new Response.Listener<JSONObject>() {
                     @Override
@@ -67,11 +88,44 @@ public class TechnologyFragment extends Fragment {
                         try {
                             response = response.getJSONObject("response");
                             JSONArray resultItems = response.getJSONArray("results");
+                            technologyListObject = new SectionListObject();
                             for (int i = 0; i < resultItems.length(); i++) {
                                 JSONObject resultItem = (JSONObject) resultItems.get(i);
-                                Log.i("SECTION NAME", resultItem.getString("sectionName"));
+
+                                //Add Title and Long title
+                                technologyListObject.newsTitleLong.add(resultItem.getString("webTitle"));
+                                TruncateString truncateString = new TruncateString(resultItem.getString("webTitle"), WORD_LENGTH);
+                                technologyListObject.newsTitle.add(truncateString.getTruncation());
+
+                                technologyListObject.webURL.add(resultItem.getString("webUrl"));
+
+                                //Add Time
+                                DateToZoneTimeString dateToZoneTimeString = new DateToZoneTimeString(resultItem.getString("webPublicationDate"));
+                                technologyListObject.newsTime.add(dateToZoneTimeString.getZoneTimeString());
+
+                                //Add Section
+                                technologyListObject.newsSection.add(resultItem.getString("sectionName"));
+
+                                //Get image
+                                String image = fetchImageURL(resultItem);
+                                ImageDownloader imageDownloader = new ImageDownloader();
+                                Bitmap img = imageDownloader.execute(image).get();
+                                technologyListObject.newsImage.add(img);
+
+                                //Get articleId
+                                technologyListObject.articleId.add(resultItem.getString("id"));
                             }
+                            if (technologyListObject.newsTitle.size() != 0) {
+                                progressBar.setVisibility(View.GONE);
+                                fetchingNews.setVisibility(View.GONE);
+                            }
+                            SectionCustomAdapter headlineCustomAdapter = new SectionCustomAdapter(getContext(), technologyListObject);
+                            technologyListView.setAdapter(headlineCustomAdapter);
                         } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
                             e.printStackTrace();
                         }
                     }
@@ -84,11 +138,9 @@ public class TechnologyFragment extends Fragment {
                 });
         RequestQueue requestQueue = Volley.newRequestQueue(view.getContext());
         requestQueue.add(jsonRequest);
-
-        return view;
     }
 
-    private String fetImageURL(JSONObject resultItem) {
+    private String fetchImageURL(JSONObject resultItem) {
         try {
             JSONArray elements = resultItem.getJSONObject("blocks")
                     .getJSONObject("main")
@@ -122,8 +174,7 @@ public class TechnologyFragment extends Fragment {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 InputStream in = conn.getInputStream();
-                Bitmap myBitmap = BitmapFactory.decodeStream(in);
-                return myBitmap;
+                return BitmapFactory.decodeStream(in);
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;

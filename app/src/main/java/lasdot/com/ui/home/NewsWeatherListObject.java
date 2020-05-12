@@ -6,7 +6,7 @@ import android.graphics.Bitmap;
 import java.util.ArrayList;
 
 public class NewsWeatherListObject {
-    public static ArrayList<String> newsTitle, newsTime, newsSection, articleId, newsTitleLong;
+    public static ArrayList<String> newsTitle, newsTime, newsSection, articleId, newsTitleLong, webURL;
     public static ArrayList<Bitmap> newsImage;
     public static String city, state, description;
     public static int temperature;
@@ -21,5 +21,6 @@ public class NewsWeatherListObject {
         articleId = new ArrayList<>();
         newsTitleLong = new ArrayList<>();
         newsImage = new ArrayList<>();
+        webURL = new ArrayList<>();
     }
 }

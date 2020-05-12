@@ -1,7 +1,5 @@
 package lasdot.com.ui.headlines;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -24,7 +22,6 @@ public class SectionPagerAdapter extends FragmentPagerAdapter {
     @NonNull
     @Override
     public Fragment getItem(int position) {
-        Log.i("FRAGMENT POSITION", Integer.toString(position));
         return fragmentList.get(position);
     }
 

@@ -13,9 +13,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -23,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,19 +45,27 @@ import lasdot.com.R;
 import lasdot.com.TruncateString;
 
 public class HomeFragment extends Fragment {
-    protected LocationManager locationManager;
+    private LocationManager locationManager;
 
-    protected LocationListener locationListener;
+    private LocationListener locationListener;
 
-    protected RecyclerView newsList;
+    private Location prevLocation;
+
+    private RecyclerView newsList;
 
     private static int TITLELENGTH = 13;
 
-    ApiKeys api = new ApiKeys();
+    private ApiKeys api = new ApiKeys();
 
     private NewsWeatherListObject newsWeatherListObject;
 
-    HomeCustomAdapter homeAdapter;
+    private HomeCustomAdapter homeAdapter;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private ProgressBar progressBar;
+
+    private TextView fetchingNews;
 
 
     @Override
@@ -71,6 +83,19 @@ public class HomeFragment extends Fragment {
 
         newsWeatherListObject = new NewsWeatherListObject();
 
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshHomeFrag);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                executeLocationHandler();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        progressBar = (ProgressBar) view.findViewById(R.id.homeProgressBar);
+        fetchingNews = view.findViewById(R.id.homeFetchingTextView);
+
+
         newsList = view.findViewById(R.id.newsListView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         newsList.setLayoutManager(linearLayoutManager);
@@ -81,12 +106,10 @@ public class HomeFragment extends Fragment {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                String longitude = Double.toString(location.getLongitude());
-                String latitude = Double.toString(location.getLatitude());
-                String url = "http://ip-api.com/json?lat="+latitude+"&lon="+longitude;
 
-                FetchJSON fetchJSON = new FetchJSON(getContext(), postExecute, "location");
-                fetchJSON.execute(url);
+                prevLocation = location;
+
+                executeLocationHandler();
             }
 
             @Override
@@ -112,6 +135,15 @@ public class HomeFragment extends Fragment {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 60*1000, 1000, locationListener);
         }
         return view;
+    }
+
+    private void executeLocationHandler() {
+        String longitude = Double.toString(prevLocation.getLongitude());
+        String latitude = Double.toString(prevLocation.getLatitude());
+        String url = "http://ip-api.com/json?lat="+latitude+"&lon="+longitude;
+
+        FetchJSON fetchJSON = new FetchJSON(getContext(), postExecute, "location");
+        fetchJSON.execute(url);
     }
 
     @SuppressLint("HandlerLeak")
@@ -162,6 +194,8 @@ public class HomeFragment extends Fragment {
                 newsWeatherListObject.newsTitle.add(resultTitle);
                 newsWeatherListObject.newsTitleLong.add(resultItem.getString("webTitle"));
 
+                newsWeatherListObject.webURL.add(resultItem.getString("webUrl"));
+
                 newsWeatherListObject.articleId.add(resultItem.getString("id"));
 
                 newsWeatherListObject.newsImage.add(image);
@@ -171,6 +205,11 @@ public class HomeFragment extends Fragment {
                 newsWeatherListObject.newsTime.add(dateToZoneTimeString.getZoneTimeString());
 
                 newsWeatherListObject.isWeather = false;
+            }
+
+            if (newsWeatherListObject.newsTitle.size() != 0) {
+                progressBar.setVisibility(View.GONE);
+                fetchingNews.setVisibility(View.GONE);
             }
             homeAdapter.notifyDataSetChanged();
         }

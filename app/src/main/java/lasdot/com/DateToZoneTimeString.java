@@ -36,4 +36,81 @@ public class DateToZoneTimeString {
             return Integer.toString(diff) + "s ago";
         }
     }
+
+    public String getDayMonthZoneTimeString() {
+        ZonedDateTime zdtAtArticle = ZonedDateTime.parse(dateString);
+        ZoneId zoneId = ZoneId.of("America/Los_Angeles");
+        ZonedDateTime zdtAtLos = zdtAtArticle.withZoneSameInstant(zoneId);
+
+        String month = zdtAtLos.getMonth().toString();
+        month = getAbbrMonth(month);
+
+        String day;
+        if (zdtAtLos.getDayOfMonth() < 10)
+            day = "0" + zdtAtLos.getDayOfMonth();
+        else
+            day = Integer.toString(zdtAtLos.getDayOfMonth());
+
+        return day + " " + month;
+    }
+
+    public String getFullDateZoneTimeString() {
+        ZonedDateTime zdtAtArticle = ZonedDateTime.parse(dateString);
+        ZoneId zoneId = ZoneId.of("America/Los_Angeles");
+        ZonedDateTime zdtAtLos = zdtAtArticle.withZoneSameInstant(zoneId);
+
+        String month = zdtAtLos.getMonth().toString();
+        month = getAbbrMonth(month);
+
+        String day;
+        if (zdtAtLos.getDayOfMonth() < 10)
+            day = "0" + zdtAtLos.getDayOfMonth();
+        else
+            day = Integer.toString(zdtAtLos.getDayOfMonth());
+
+        return day + " " + month + " " + zdtAtLos.getYear();
+    }
+
+    private String getAbbrMonth(String month) {
+        switch (month) {
+            case "JANUARY":
+                month = "Jan";
+                break;
+            case "FEBRUARY":
+                month = "Feb";
+                break;
+            case "MARCH":
+                month = "Mar";
+                break;
+            case "APRIL":
+                month = "Apr";
+                break;
+            case "MAY":
+                month = "May";
+                break;
+            case "JUNE":
+                month = "Jun";
+                break;
+            case "JULY":
+                month = "Jul";
+                break;
+            case "AUGUST":
+                month = "Aug";
+                break;
+            case "SEPTEMBER":
+                month = "Sep";
+                break;
+            case "OCTOBER":
+                month = "Oct";
+                break;
+            case "NOVEMBER":
+                month = "Nov";
+                break;
+            case "DECEMBER":
+                month = "Dec";
+                break;
+        }
+        return month;
+    }
+
 }

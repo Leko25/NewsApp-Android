@@ -1,22 +1,20 @@
 package lasdot.com.ui.headlines;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -29,9 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
@@ -42,25 +38,47 @@ import lasdot.com.TruncateString;
 
 public class SportsFragment extends Fragment {
 
-    HeadlineListObject sportsListObject;
+    private SectionListObject sportsListObject;
 
-    private static int WORD_LENGTH = 13;
+    private int WORD_LENGTH = 13;
 
-    protected RecyclerView sportsListView;
+    private RecyclerView sportsListView;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private ProgressBar progressBar;
+
+    private TextView fetchingNews;
 
     public SportsFragment() {
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_sports, container, false);
+        final View view = inflater.inflate(R.layout.fragment_sports, container, false);
         sportsListView = view.findViewById(R.id.sportsListView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         sportsListView.setLayoutManager(linearLayoutManager);
 
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshSportsFrag);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                fetchSportsNews(view);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        progressBar = view.findViewById(R.id.sportsProgressBar);
+        fetchingNews = view.findViewById(R.id.sportsFetchingTextView);
+
+        fetchSportsNews(view);
+        return view;
+    }
+
+    private void fetchSportsNews(View view) {
         JsonObjectRequest jsonRequest = new JsonObjectRequest
                 (Request.Method.GET, "http://35.188.11.46:3000/results/sport?source=guardian", null, new Response.Listener<JSONObject>() {
                     @Override
@@ -69,12 +87,16 @@ public class SportsFragment extends Fragment {
                         try {
                             response = response.getJSONObject("response");
                             JSONArray resultItems = response.getJSONArray("results");
-                            sportsListObject = new HeadlineListObject();
+                            sportsListObject = new SectionListObject();
                             for (int i = 0; i < resultItems.length(); i++) {
                                 JSONObject resultItem = (JSONObject) resultItems.get(i);
+
+                                // Add Title and Long title
                                 sportsListObject.newsTitleLong.add(resultItem.getString("webTitle"));
                                 TruncateString truncateString = new TruncateString(resultItem.getString("webTitle"), WORD_LENGTH);
                                 sportsListObject.newsTitle.add(truncateString.getTruncation());
+
+                                sportsListObject.webURL.add(resultItem.getString("webUrl"));
 
                                 //Add Time
                                 DateToZoneTimeString dateToZoneTimeString = new DateToZoneTimeString(resultItem.getString("webPublicationDate"));
@@ -84,7 +106,7 @@ public class SportsFragment extends Fragment {
                                 sportsListObject.newsSection.add(resultItem.getString("sectionName"));
 
                                 //Get image
-                                String image = fetImageURL(resultItem);
+                                String image = fetchImageURL(resultItem);
                                 ImageDownloader imageDownloader = new ImageDownloader();
                                 Bitmap img = imageDownloader.execute(image).get();
                                 sportsListObject.newsImage.add(img);
@@ -92,7 +114,11 @@ public class SportsFragment extends Fragment {
                                 //Get articleId
                                 sportsListObject.articleId.add(resultItem.getString("id"));
                             }
-                            HeadlineCustomAdapter headlineCustomAdapter = new HeadlineCustomAdapter(getContext(), sportsListObject);
+                            if (sportsListObject.newsTitle.size() != 0) {
+                                progressBar.setVisibility(View.GONE);
+                                fetchingNews.setVisibility(View.GONE);
+                            }
+                            SectionCustomAdapter headlineCustomAdapter = new SectionCustomAdapter(getContext(), sportsListObject);
                             sportsListView.setAdapter(headlineCustomAdapter);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -111,11 +137,9 @@ public class SportsFragment extends Fragment {
                 });
         RequestQueue requestQueue = Volley.newRequestQueue(view.getContext());
         requestQueue.add(jsonRequest);
-
-        return view;
     }
 
-    private String fetImageURL(JSONObject resultItem) {
+    private String fetchImageURL(JSONObject resultItem) {
         try {
             JSONArray elements = resultItem.getJSONObject("blocks")
                     .getJSONObject("main")
@@ -149,8 +173,7 @@ public class SportsFragment extends Fragment {
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
                 InputStream in = conn.getInputStream();
-                Bitmap myBitmap = BitmapFactory.decodeStream(in);
-                return myBitmap;
+                return BitmapFactory.decodeStream(in);
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;

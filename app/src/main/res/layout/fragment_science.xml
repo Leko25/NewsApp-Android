@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.headlines.TechnologyFragment">
+    tools:context=".ui.headlines.ScienceFragment">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshTechnologyFrag"
+        android:id="@+id/swipeRefreshScienceFrag"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginStart="8dp"
@@ -22,7 +22,7 @@
         app:layout_constraintVertical_bias="0.0">
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/technologyListView"
+            android:id="@+id/scienceListView"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginStart="8dp"
@@ -37,7 +37,7 @@
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
-        android:id="@+id/technologyProgressBar"
+        android:id="@+id/scienceProgressBar"
         style="?android:attr/progressBarStyle"
         android:layout_width="43dp"
         android:layout_height="35dp"
@@ -48,13 +48,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/technologyFetchingTextView"
+        android:id="@+id/scienceFetchingTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Fetching News"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/technologyProgressBar" />
+        app:layout_constraintTop_toBottomOf="@+id/scienceProgressBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

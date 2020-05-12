@@ -19,6 +19,6 @@
     <item
         android:id="@+id/navigation_bookmarks"
         android:icon="@drawable/baseline_bookmarks_black_18dp"
-        android:title="@string/title_trending" />
+        android:title="@string/title_bookmarks" />
 
 </menu>

@@ -33,15 +33,17 @@ import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import lasdot.com.DateToZoneTimeString;
-import lasdot.com.R;
 import lasdot.com.TruncateString;
 
-public class BusinessFragment extends Fragment {
+import lasdot.com.R;
+
+public class ScienceFragment extends Fragment {
+
     private int WORD_LENGTH = 13;
 
-    private SectionListObject businessListObject;
+    private RecyclerView scienceListView;
 
-    private RecyclerView businessListView;
+    private SectionListObject scienceListObject;
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -49,76 +51,76 @@ public class BusinessFragment extends Fragment {
 
     private TextView fetchingNews;
 
-    public BusinessFragment() {
+    public ScienceFragment() {
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        final View view = inflater.inflate(R.layout.fragment_business, container, false);
-        businessListView = view.findViewById(R.id.businessListView);
+        final View view = inflater.inflate(R.layout.fragment_science, container, false);
+        scienceListView = view.findViewById(R.id.scienceListView);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        businessListView.setLayoutManager(linearLayoutManager);
+        scienceListView.setLayoutManager(linearLayoutManager);
 
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshBusinessFrag);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshScienceFrag);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                fetchBusinessNews(view);
+                fetchScienceNews(view);
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
 
-        progressBar = view.findViewById(R.id.businessProgressBar);
-        fetchingNews = view.findViewById(R.id.businessFetchingTextView);
+        progressBar = view.findViewById(R.id.scienceProgressBar);
+        fetchingNews = view.findViewById(R.id.scienceFetchingTextView);
 
-        fetchBusinessNews(view);
+        fetchScienceNews(view);
         return view;
     }
 
-    private void fetchBusinessNews(View view) {
+    private void fetchScienceNews(View view) {
         JsonObjectRequest jsonRequest = new JsonObjectRequest
-                (Request.Method.GET, "http://35.188.11.46:3000/results/business?source=guardian", null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, "http://35.188.11.46:3000/results/science?source=guardian", null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         // the response is already constructed as a JSONObject!
                         try {
                             response = response.getJSONObject("response");
                             JSONArray resultItems = response.getJSONArray("results");
-                            businessListObject = new SectionListObject();
+                            scienceListObject = new SectionListObject();
                             for (int i = 0; i < resultItems.length(); i++) {
                                 JSONObject resultItem = (JSONObject) resultItems.get(i);
 
                                 //Add Title and Long title
-                                businessListObject.newsTitleLong.add(resultItem.getString("webTitle"));
+                                scienceListObject.newsTitleLong.add(resultItem.getString("webTitle"));
                                 TruncateString truncateString = new TruncateString(resultItem.getString("webTitle"), WORD_LENGTH);
-                                businessListObject.newsTitle.add(truncateString.getTruncation());
+                                scienceListObject.newsTitle.add(truncateString.getTruncation());
 
-                                businessListObject.webURL.add(resultItem.getString("webUrl"));
+                                scienceListObject.webURL.add(resultItem.getString("webUrl"));
 
                                 //Add Time
                                 DateToZoneTimeString dateToZoneTimeString = new DateToZoneTimeString(resultItem.getString("webPublicationDate"));
-                                businessListObject.newsTime.add(dateToZoneTimeString.getZoneTimeString());
+                                scienceListObject.newsTime.add(dateToZoneTimeString.getZoneTimeString());
 
                                 //Add Section
-                                businessListObject.newsSection.add(resultItem.getString("sectionName"));
+                                scienceListObject.newsSection.add(resultItem.getString("sectionName"));
 
                                 //Get image
                                 String image = fetchImageURL(resultItem);
                                 ImageDownloader imageDownloader = new ImageDownloader();
                                 Bitmap img = imageDownloader.execute(image).get();
-                                businessListObject.newsImage.add(img);
+                                scienceListObject.newsImage.add(img);
 
                                 //Get articleId
-                                businessListObject.articleId.add(resultItem.getString("id"));
+                                scienceListObject.articleId.add(resultItem.getString("id"));
                             }
-                            if (businessListObject.newsTitle.size() != 0) {
+                            if (scienceListObject.newsTitle.size() != 0) {
                                 progressBar.setVisibility(View.GONE);
                                 fetchingNews.setVisibility(View.GONE);
                             }
-                            SectionCustomAdapter headlineCustomAdapter = new SectionCustomAdapter(getContext(), businessListObject);
-                            businessListView.setAdapter(headlineCustomAdapter);
+                            SectionCustomAdapter headlineCustomAdapter = new SectionCustomAdapter(getContext(), scienceListObject);
+                            scienceListView.setAdapter(headlineCustomAdapter);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         } catch (InterruptedException e) {
@@ -179,4 +181,5 @@ public class BusinessFragment extends Fragment {
             }
         }
     }
+
 }

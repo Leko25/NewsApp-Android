@@ -4,16 +4,17 @@ import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 
-public class HeadlineListObject {
-    public ArrayList<String> newsTitle, newsTime, newsSection, articleId, newsTitleLong;
+public class SectionListObject {
+    public ArrayList<String> newsTitle, newsTime, newsSection, articleId, newsTitleLong, webURL;
     public ArrayList<Bitmap> newsImage;
 
-    public HeadlineListObject() {
+    public SectionListObject() {
         newsTitle = new ArrayList<>();
         newsTime = new ArrayList<>();
         newsSection = new ArrayList<>();
         articleId = new ArrayList<>();
         newsTitleLong = new ArrayList<>();
         newsImage = new ArrayList<>();
+        webURL = new ArrayList<>();
     }
 }
